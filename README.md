@@ -1,121 +1,121 @@
-我们的代码将在论文接收后公开。
+Our code will be released upon acceptance of the paper.
 
-# HFINet 实验环境与数据集划分
+# HFINet Experimental Setup and Dataset Splits
 
-HFINet在LoveDA、ISPRS Potsdam和ISPRS Vaihingen三个数据集上开展遥感图像语义分割实验。本文档列出实验环境、数据划分及训练和测试设置。
+We evaluate HFINet for remote sensing image semantic segmentation on three datasets: LoveDA, ISPRS Potsdam, and ISPRS Vaihingen. This document describes the experimental environment, dataset splits, and training and testing settings.
 
-## 实验环境
+## Experimental Environment
 
-| 项目 | 配置 |
-| --- | --- |
-| 操作系统 | Ubuntu 20.04 |
-| CPU | Intel Xeon Platinum 8352V，16 vCPU |
-| GPU | 单张vGPU，32 GB显存 |
-| Python | 3.8 |
-| PyTorch | 2.0.0 |
-| CUDA | 11.8 |
-| 计算精度 | FP32 |
-| 编码器初始化 | SWSL分类预训练的ResNet-18权重 |
+| Component              | Configuration                                          |
+| ---------------------- | ------------------------------------------------------ |
+| Operating system       | Ubuntu 20.04                                           |
+| CPU                    | Intel Xeon Platinum 8352V, 16 vCPUs                    |
+| GPU                    | One vGPU with 32 GB of memory                          |
+| Python                 | 3.8                                                    |
+| PyTorch                | 2.0.0                                                  |
+| CUDA                   | 11.8                                                   |
+| Numerical precision    | FP32                                                   |
+| Encoder initialization | ResNet-18 weights from SWSL classification pretraining |
 
-## 数据集
+## Datasets
 
-### 数据集概览
+### Dataset Overview
 
-| 数据集 | 输入波段 | 空间分辨率 | 原始图像尺寸 | 类别数 |
-| --- | --- | --- | --- | ---: |
-| LoveDA | RGB | 0.3 m | 1024 × 1024 | 7 |
-| ISPRS Potsdam | IRRG | 5 cm | 6000 × 6000 | 6 |
-| ISPRS Vaihingen | IRRG | 9 cm | 尺寸不等 | 6 |
+| Dataset         | Input bands | Spatial resolution | Original image size | Number of classes |
+| --------------- | ----------- | ------------------ | ------------------- | ----------------: |
+| LoveDA          | RGB         | 0.3 m              | 1024 × 1024         |                 7 |
+| ISPRS Potsdam   | IRRG        | 5 cm               | 6000 × 6000         |                 6 |
+| ISPRS Vaihingen | IRRG        | 9 cm               | Variable            |                 6 |
 
-IRRG表示近红外、红、绿三个波段。LoveDA包含背景、建筑、道路、水体、裸地、森林和农田七类；Potsdam与Vaihingen包含不透水面、建筑物、低矮植被、树木、汽车和杂乱类六类。
+IRRG denotes the near-infrared, red, and green bands. LoveDA contains seven classes: background, building, road, water, barren, forest, and agriculture. Potsdam and Vaihingen contain six classes: impervious surface, building, low vegetation, tree, car, and clutter.
 
-### 划分总览
+### Split Summary
 
-| 数据集 | 训练集 | 验证集 | 测试集 |
-| --- | ---: | ---: | ---: |
-| LoveDA | 2522幅 | 1669幅 | 1796幅 |
-| ISPRS Potsdam | 22幅 | 1幅 | 14幅 |
-| ISPRS Vaihingen | 15幅 | 1幅 | 17幅 |
+| Dataset         | Training images | Validation images | Test images |
+| --------------- | --------------: | ----------------: | ----------: |
+| LoveDA          |            2522 |              1669 |        1796 |
+| ISPRS Potsdam   |              22 |                 1 |          14 |
+| ISPRS Vaihingen |              15 |                 1 |          17 |
 
-以上数量均为原始图像数量，统计于裁剪和数据增强之前。训练集用于参数优化，验证集用于模型选择，测试集用于最终评估。三个划分的原始图像互不重叠。
+These counts refer to original images before cropping and augmentation. The training set is used for parameter optimization, the validation set for model selection, and the test set for final evaluation. Within each dataset, the three splits contain mutually exclusive original images.
 
 ### LoveDA
 
-使用官方Train、Val和Test划分，各划分中的城市（Urban）与农村（Rural）图像合并使用。
+We use the official Train, Val, and Test splits, combining the Urban and Rural images within each split.
 
-| 官方划分 | 农村图像 | 城市图像 | 合计 |
-| --- | ---: | ---: | ---: |
-| Train | 1366 | 1156 | 2522 |
-| Val | 992 | 677 | 1669 |
-| Test | 976 | 820 | 1796 |
+| Official split | Rural images | Urban images | Total |
+| -------------- | -----------: | -----------: | ----: |
+| Train          |         1366 |         1156 |  2522 |
+| Val            |          992 |          677 |  1669 |
+| Test           |          976 |          820 |  1796 |
 
-验证集用于选择最优模型，不并入训练集。最终测试使用官方Test划分的1796幅图像；该划分不公开像素级真值，预测结果通过官方评测平台评价。
+The validation set is used for model selection and is not included in training. Final testing uses all 1796 images in the official Test split. Pixel-level ground-truth labels for this split are not publicly available, and predictions are evaluated through the official evaluation platform.
 
 ### ISPRS Potsdam
 
-按照原始图幅编号划分训练、验证和测试集。38幅原始图像中，图幅`7_10`不参与实验，其余37幅按以下方式使用。
+The dataset is partitioned using the original tile IDs. Of the 38 original tiles, tile `7_10` is excluded from the experiments. The remaining 37 tiles are assigned as follows.
 
 ```text
-训练集（22幅）
+Training set (22 tiles)
 2_11, 2_12, 3_10, 3_11, 3_12, 4_10, 4_11, 4_12,
 5_10, 5_11, 5_12, 6_7, 6_8, 6_9, 6_10, 6_11,
 6_12, 7_7, 7_8, 7_9, 7_11, 7_12
 
-验证集（1幅）
+Validation set (1 tile)
 2_10
 
-测试集（14幅）
+Test set (14 tiles)
 2_13, 2_14, 3_13, 3_14, 4_13, 4_14, 4_15,
 5_13, 5_14, 5_15, 6_13, 6_14, 6_15, 7_13
 ```
 
 ### ISPRS Vaihingen
 
-按照原始图幅的area编号划分，使用全部33幅图像。
+All 33 original images are used, with the splits defined by their area IDs.
 
 ```text
-训练集（15幅）
+Training set (15 images)
 1, 3, 5, 7, 11, 13, 15, 17, 21, 23, 26, 28, 32, 34, 37
 
-验证集（1幅）
+Validation set (1 image)
 30
 
-测试集（17幅）
+Test set (17 images)
 2, 4, 6, 8, 10, 12, 14, 16, 20, 22, 24, 27, 29, 31, 33, 35, 38
 ```
 
-## 数据处理
+## Data Preprocessing
 
-- **Potsdam与Vaihingen：** 先按原始图幅划分数据，再以1024 × 1024的图块尺寸和步长进行非重叠裁剪。训练数据包含原始、水平翻转和垂直翻转三种视图；验证与测试不进行翻转扩增。填充区域不参与损失和评价计算。Vaihingen采用未经边界腐蚀的COMPLETE完整标签。
-- **LoveDA：** 保留原始1024 × 1024 RGB图像，不进行离线切块或翻转扩增。
-- **在线训练：** 输入尺寸为512 × 512，采用Mosaic、随机缩放、随机裁剪和以90°为间隔的随机旋转，并按ImageNet均值和标准差归一化。
-- **验证与测试：** 输入尺寸为1024 × 1024，仅进行归一化，不采用测试时增强（TTA）。
+- **Potsdam and Vaihingen:** The original images are assigned to their respective splits before cropping. Non-overlapping patches are extracted using a patch size and stride of 1024 × 1024. Training data include original, horizontally flipped, and vertically flipped views; validation and test data are not expanded through flipping. Padded regions are excluded from loss computation and evaluation. For Vaihingen, we use the COMPLETE ground-truth labels without boundary erosion.
+- **LoveDA:** The original 1024 × 1024 RGB images are retained without offline cropping or flip augmentation.
+- **Online training augmentation:** The input size is 512 × 512. Augmentations include Mosaic, random scaling, random cropping, and random rotation in multiples of 90°, followed by normalization using the ImageNet mean and standard deviation.
+- **Validation and testing:** The input size is 1024 × 1024, and only normalization is applied. No test-time augmentation (TTA) is used.
 
-Potsdam与Vaihingen经过离线处理后的图块数量如下。其中训练图块数量包含上述三种视图，与前文原始图像数量的统计口径不同。
+The numbers of patches produced by offline preprocessing for Potsdam and Vaihingen are listed below. 
 
-| 数据集 | 训练图块 | 验证图块 | 测试图块 |
-| --- | ---: | ---: | ---: |
-| ISPRS Potsdam | 2376 | 36 | 504 |
-| ISPRS Vaihingen | 273 | 6 | 113 |
+| Dataset         | Training patches | Validation patches | Test patches |
+| --------------- | ---------------: | -----------------: | -----------: |
+| ISPRS Potsdam   |             2376 |                 36 |          504 |
+| ISPRS Vaihingen |              273 |                  6 |          113 |
 
-## 训练与测试设置
+## Training and Testing Settings
 
-| 项目 | 设置 |
-| --- | --- |
-| 训练轮数 | 105 |
-| 训练批量大小 | 24 |
-| 验证／测试批量大小 | 8 |
-| 优化器 | AdamW结合Lookahead |
-| 编码器初始学习率 | 6 × 10⁻⁵ |
-| 其余模块初始学习率 | 6 × 10⁻⁴ |
-| 权重衰减 | 0.01，偏置参数不施加权重衰减 |
-| 学习率调度 | 余弦退火热重启，初始周期15轮，后续周期长度按2倍扩展 |
-| 损失函数 | 标签平滑交叉熵损失与Dice损失等权相加 |
-| 标签平滑系数 | 0.05 |
-| 模型选择 | 每轮在验证集上评估，选择验证集F1最高的模型进行测试 |
+| Parameter                                       | Setting                                                      |
+| ----------------------------------------------- | ------------------------------------------------------------ |
+| Training epochs                                 | 105                                                          |
+| Training batch size                             | 24                                                           |
+| Validation/test batch size                      | 8                                                            |
+| Optimizer                                       | AdamW with Lookahead                                         |
+| Initial encoder learning rate                   | 6 × 10⁻⁵                                                     |
+| Initial learning rate for the remaining modules | 6 × 10⁻⁴                                                     |
+| Weight decay                                    | 0.01; no weight decay is applied to bias parameters          |
+| Learning rate schedule                          | Cosine annealing with warm restarts; initial period: 15 epochs; period multiplier: 2 |
+| Loss function                                   | Equally weighted sum of label-smoothed cross-entropy loss and Dice loss |
+| Label smoothing factor                          | 0.05                                                         |
+| Model selection                                 | Evaluate on the validation set after each epoch and test the model with the highest validation F1 |
 
-## 评价口径
+## Evaluation Protocol
 
-Potsdam与Vaihingen报告各类别F1、mIoU、mF1和OA。其中，mIoU与mF1为除杂乱类外五个类别的宏平均，OA按全部六类有效像素计算。
+For Potsdam and Vaihingen, we report per-class F1, mean Intersection over Union (mIoU), mean F1 (mF1), and Overall Accuracy (OA). The mIoU and mF1 are macro-averages over the five classes excluding clutter, while OA is computed over valid pixels from all six classes.
 
-LoveDA采用包含背景类在内的七类评价口径。原始标签中的0为无效像素，原始标签1至7对应七个有效类别；数据加载时将其分别映射为忽略值7和类别编号0至6。背景类参与训练和评价，无效像素不参与计算。测试指标以官方评测结果为准。
+LoveDA uses all seven classes, including background, for evaluation. In the original annotations, label 0 denotes invalid pixels, and labels 1–7 correspond to the seven valid classes. For data loading, label 0 is mapped to the ignore value 7, and labels 1–7 are mapped to class IDs 0–6. The background class participates in both training and evaluation, while invalid pixels are excluded. Test metrics are obtained from the official evaluation platform.
