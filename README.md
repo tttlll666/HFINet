@@ -9,8 +9,8 @@ We evaluate HFINet for remote sensing image semantic segmentation on three datas
 | Component              | Configuration                                          |
 | ---------------------- | ------------------------------------------------------ |
 | Operating system       | Ubuntu 20.04                                           |
-| CPU                    | Intel Xeon Platinum 8352V, 16 vCPUs                    |
-| GPU                    | One vGPU with 32 GB of memory                          |
+| CPU                    | Intel Xeon Platinum 8352V                              |
+| GPU                    | a single NVIDIA RTX 4080 SUPER GPU                     |
 | Python                 | 3.8                                                    |
 | PyTorch                | 2.0.0                                                  |
 | CUDA                   | 11.8                                                   |
